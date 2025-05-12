@@ -126,7 +126,7 @@
           <input type="number" name="startSoc">
         </div>
         <div class="form-group">
-          <label>Start H2 Pressure (bar):</label>
+          <label>Start H2 Fuel Level (%):</label>
           <input type="number" name="startH2Pressure">
         </div>
       </div>
@@ -152,7 +152,7 @@
           <input type="number" name="endSoc">
         </div>
         <div class="form-group">
-          <label>End H2 Pressure (bar):</label>
+          <label>End H2 Fuel Level (%):</label>
           <input type="number" name="endH2Pressure">
         </div>
       </div>
@@ -172,10 +172,31 @@
   <script>
     const form = document.getElementById("form");
     const status = document.getElementById("status");
+    const STORAGE_KEY = "drivingLogFormData_Arrow";
 
+    // 1. Restore saved data on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      for (const [key, value] of Object.entries(savedData)) {
+        const field = form.elements[key];
+        if (field) field.value = value;
+      }
+    });
+  
+    // 2. Save form inputs on change
+    form.addEventListener("input", () => {
+      const formData = new FormData(form);
+      const data = {};
+      for (const [key, value] of formData.entries()) {
+        data[key] = value;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    });
+  
+    // 3. Handle form submission
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
+  
       const formData = new FormData(form);
       const params = new URLSearchParams();
       for (const [key, value] of formData.entries()) {
@@ -192,8 +213,10 @@
 
         const text = await response.text();
         console.log("Response:", text);
+        
         status.innerText = "Submitted successfully!";
         form.reset();
+        localStorage.removeItem(STORAGE_KEY);
       } catch (error) {
         console.error("Submission error:", error);
         status.innerText = "Submission failed.";
